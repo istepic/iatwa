@@ -21,7 +21,6 @@ sd_write(char *sdata, size_t sdata_size)
     FRESULT ff_result;
     DSTATUS disk_state = STA_NOINIT;
 
-    // Initialize FATFS disk I/O interface by providing the block device.
     static diskio_blkdev_t drives[] =
     {
             DISKIO_BLOCKDEV_CONFIG(NRF_BLOCKDEV_BASE_ADDR(m_block_dev_sdc, block_dev), NULL)
