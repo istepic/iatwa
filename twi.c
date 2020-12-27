@@ -24,11 +24,11 @@ twi0_init(void)
 {
     uint32_t err = 0;
     const nrf_drv_twi_config_t twi0_config = {
-        .scl = 28,
-        .sda = 29,
+        .scl = TWI_0_SCL_PIN,
+        .sda = TWI_0_SDA_PIN,
         .frequency = NRF_DRV_TWI_FREQ_100K,
         .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
-        .clear_bus_init = false};
+        .clear_bus_init = true};
 
     err = nrf_drv_twi_init(&m_twi_0, &twi0_config, twi_handler, NULL);
     if (err)
@@ -42,11 +42,11 @@ twi1_init(void)
 {
     uint32_t err = 0;
     const nrf_drv_twi_config_t twi1_config = {
-        .scl = 12,
-        .sda = 13,
+        .scl = TWI_1_SCL_PIN,
+        .sda = TWI_1_SDA_PIN,
         .frequency = NRF_DRV_TWI_FREQ_100K,
         .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
-        .clear_bus_init = false};
+        .clear_bus_init = true};
 
     err = nrf_drv_twi_init(&m_twi_1, &twi1_config, twi_handler, NULL);
     if (err)

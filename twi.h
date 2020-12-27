@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "nrf_drv_twi.h"
+#include "boards.h"
 
 #include "my_errors.h"
 
