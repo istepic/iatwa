@@ -1,7 +1,5 @@
 #include "ms5611.h"
 
-extern union Sample sample;
-
 // MS5611 device address
 #define MS5611_ADDR 0x76
 
@@ -65,29 +63,26 @@ ms5611_get_coeffs(uint16_t *coeffs)
         return (uint32_t)passed_null_pointer;
     uint32_t err = 0;
     uint8_t cmd = 0;
-    sample.two_bytes[0] = 0;
-    sample.two_bytes[1] = 0;
+    uint8_t coeff_sample[2] = {0};
 
     for (size_t i = 0; i < 8; ++i)
     {
-        cmd = MS5611_PROM_READ_FROM_START + i * 2;
         /* each ROM register has to be accessed by sending 1010xyz0 where xyz
            are 3 bits representing 1 register, there are total of 8 registers */
-        err = twi_tx(0, MS5611_ADDR, &(cmd), sizeof cmd);
+        cmd = MS5611_PROM_READ_FROM_START + i * 2;
+        err = twi_read(TWI_INS_1, MS5611_ADDR, &cmd, sizeof(cmd),
+                 coeff_sample, sizeof(coeff_sample));
         if (err)
             return err;
-        /* rx sample via global variable "sample" */
-        err = twi_rx(0, MS5611_ADDR);
-        if (err)
-            return err;
-        coeffs[i] = (sample.two_bytes[0] << 8) | sample.two_bytes[1];
+        coeffs[i] = (coeff_sample[0] << 8) | coeff_sample[1];
     }
     if (!ms5611_crc_check(coeffs, coeffs[7] & 0x000F))
         return (uint32_t)crc_check_failed;
     return 0;
 }
 
-uint32_t ms5611_get_data(float *pres, float *temp)
+uint32_t
+ms5611_get_data(int32_t *pres, int32_t *temp)
 {
     if (!pres)
         return (uint32_t)passed_null_pointer;
@@ -95,53 +90,47 @@ uint32_t ms5611_get_data(float *pres, float *temp)
     uint32_t err = 0;
     uint32_t pres_data = 0;
     uint32_t temp_data = 0;
-    sample.three_bytes[0] = 0;
-    sample.three_bytes[1] = 0;
-    sample.three_bytes[2] = 0;
-    uint8_t cmd_start_pres = MS5611_START_PRESSURE_ADC_CONVERSION;
-    uint8_t cmd_start_temp = MS5611_START_TEMPERATURE_ADC_CONVERSION;
-    uint8_t cmd_read_adc = MS5611_READ_ADC;
+    uint8_t data_sample[3] = {0};
+    uint8_t cmd = 0;
     int64_t OFF, SENS, T2, OFF2, SENS2;
     int32_t dT, TEMP, P;
 
     err = ms5611_get_coeffs(coeffs);
     if (err)
         return err;
-    err = twi_tx(0, MS5611_ADDR, &cmd_start_pres, sizeof cmd_start_pres);
-    if (err)
-        return err;
-    nrf_delay_ms(10);
-    err = twi_tx(0, MS5611_ADDR, &cmd_read_adc, sizeof cmd_read_adc);
-    if (err)
-        return err;
-    err = twi_rx(0, MS5611_ADDR);
-    if (err)
-        return err;
-    pres_data = (sample.three_bytes[0] << 16) |
-                (sample.three_bytes[1] << 8) |
-                (sample.three_bytes[2]);
 
-    sample.three_bytes[0] = 0;
-    sample.three_bytes[1] = 0;
-    sample.three_bytes[2] = 0;
-    err = twi_tx(0, MS5611_ADDR, &cmd_start_temp, sizeof cmd_start_temp);
+    cmd = MS5611_START_PRESSURE_ADC_CONVERSION;
+    err = twi_tx(TWI_INS_1, MS5611_ADDR, &cmd, sizeof cmd);
     if (err)
         return err;
     nrf_delay_ms(10);
-    err = twi_tx(0, MS5611_ADDR, &cmd_read_adc, sizeof cmd_read_adc);
+
+    cmd = MS5611_READ_ADC;
+    twi_read(TWI_INS_1, MS5611_ADDR, &cmd, sizeof(cmd),
+                 data_sample, sizeof(data_sample));
+    pres_data = (data_sample[0] << 16) |
+                (data_sample[1] << 8) |
+                (data_sample[2]);
+
+    cmd = MS5611_START_TEMPERATURE_ADC_CONVERSION;
+    err = twi_tx(TWI_INS_1, MS5611_ADDR, &cmd, sizeof cmd);
     if (err)
         return err;
-    err = twi_rx(0, MS5611_ADDR);
-    if (err)
-        return err;
-    temp_data = (sample.three_bytes[0] << 16) |
-                (sample.three_bytes[1] << 8) |
-                (sample.three_bytes[2]);
+    nrf_delay_ms(10);
+
+    cmd = MS5611_READ_ADC;
+    twi_read(TWI_INS_1, MS5611_ADDR, &cmd, sizeof(cmd),
+             data_sample, sizeof(data_sample));
+    temp_data = (data_sample[0] << 16) |
+                (data_sample[1] << 8) |
+                (data_sample[2]);
 
     // Difference between actual and reference temperature = D2 - Tref
-    dT = (int32_t)temp_data - ((int32_t)coeffs[MS5611_REFERENCE_TEMPERATURE_INDEX] << 8);
+    dT = (int32_t)temp_data -
+         ((int32_t)coeffs[MS5611_REFERENCE_TEMPERATURE_INDEX] << 8);
     // Actual temperature = 2000 + dT * TEMPSENS
-    TEMP = 2000 + ((int64_t)dT * (int64_t)coeffs[MS5611_TEMP_COEFF_OF_TEMPERATURE_INDEX] >> 23);
+    TEMP = 2000 + ((int64_t)dT *
+           (int64_t)coeffs[MS5611_TEMP_COEFF_OF_TEMPERATURE_INDEX] >> 23);
     printf("TEMP %ld\r\n", TEMP);
     // Second order temperature compensation
     if (TEMP < 2000)
@@ -164,11 +153,13 @@ uint32_t ms5611_get_data(float *pres, float *temp)
     }
 
     // OFF = OFF_T1 + TCO * dT
-    OFF = ((int64_t)(coeffs[MS5611_PRESSURE_OFFSET_INDEX]) << 16) + (((int64_t)(coeffs[MS5611_TEMP_COEFF_OF_PRESSURE_OFFSET_INDEX]) * dT) >> 7);
+    OFF = ((int64_t)(coeffs[MS5611_PRESSURE_OFFSET_INDEX]) << 16) +
+          (((int64_t)(coeffs[MS5611_TEMP_COEFF_OF_PRESSURE_OFFSET_INDEX]) * dT) >> 7);
     OFF -= OFF2;
 
     // Sensitivity at actual temperature = SENS_T1 + TCS * dT
-    SENS = ((int64_t)coeffs[MS5611_PRESSURE_SENSITIVITY_INDEX] << 15) + (((int64_t)coeffs[MS5611_TEMP_COEFF_OF_PRESSURE_SENSITIVITY_INDEX] * dT) >> 8);
+    SENS = ((int64_t)coeffs[MS5611_PRESSURE_SENSITIVITY_INDEX] << 15) +
+           (((int64_t)coeffs[MS5611_TEMP_COEFF_OF_PRESSURE_SENSITIVITY_INDEX] * dT) >> 8);
     SENS -= SENS2;
 
 
@@ -176,7 +167,7 @@ uint32_t ms5611_get_data(float *pres, float *temp)
     P = (((pres_data * SENS) >> 21) - OFF) >> 15;
     printf("PRESS %ld\r\n", P);
 
-    *pres = (float)P / 100;
-    *temp = ((float)TEMP - T2) / 100;
+    *pres = P;
+    *temp = TEMP - T2;
     return 0;
 }

@@ -4,8 +4,6 @@ static const nrf_drv_twi_t m_twi_0 = NRF_DRV_TWI_INSTANCE(0);
 static const nrf_drv_twi_t m_twi_1 = NRF_DRV_TWI_INSTANCE(1);
 static volatile bool twi_transfer_done;
 
-union Sample sample;
-
 static void
 twi_handler(nrf_drv_twi_evt_t const *p_event, void *p_context)
 {
@@ -55,6 +53,11 @@ twi1_init(void)
     return 0;
 }
 
+/* ++++++++++++++++++++++++++++++ Interface ++++++++++++++++++++++++++++++++++*/
+
+/**
+ * @brief TWI Init
+ */
 uint32_t
 twi_init(void)
 {
@@ -64,28 +67,16 @@ twi_init(void)
     return 0;
 }
 
+/**
+ * @brief TWI RX
+ * @param twi_ins TWI instance
+ * @param addr I2C address
+ * @param data Data pointer
+ * @param size Data size
+ */
 uint32_t
-twi_rx(const uint8_t twi_ins, const uint8_t addr)
-{
-    twi_transfer_done = false;
-    uint32_t err = 0;
-    void *sample_ptr = &sample;
-    switch (twi_ins)
-    {
-    case 0:
-        err = nrf_drv_twi_rx(&m_twi_0, addr, sample_ptr, sizeof(sample));
-        while (twi_transfer_done == false)
-            ;
-    case 1:
-        err = nrf_drv_twi_rx(&m_twi_1, addr, sample_ptr, sizeof(sample));
-        while (twi_transfer_done == false)
-            ;
-    }
-    return err;
-}
-
-uint32_t
-twi_tx(const uint8_t twi_ins, const uint8_t addr, uint8_t *data, uint8_t size)
+twi_rx(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *data,
+       size_t size)
 {
     if (!data)
         return (uint32_t)passed_null_pointer;
@@ -94,13 +85,66 @@ twi_tx(const uint8_t twi_ins, const uint8_t addr, uint8_t *data, uint8_t size)
     switch (twi_ins)
     {
     case 0:
-        err = nrf_drv_twi_tx(&m_twi_0, addr, data, size, false);
+        err = nrf_drv_twi_rx(&m_twi_0, twi_addr, data, size);
         while (twi_transfer_done == false)
             ;
     case 1:
-        err = nrf_drv_twi_tx(&m_twi_1, addr, data, size, false);
+        err = nrf_drv_twi_rx(&m_twi_1, twi_addr, data, size);
         while (twi_transfer_done == false)
             ;
     }
+    return err;
+}
+
+/**
+ * @brief TWI TX
+ * @param twi_ins TWI instance
+ * @param addr I2C address
+ * @param data Data pointer
+ * @param size Data size
+ */
+uint32_t
+twi_tx(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *data,
+       size_t size)
+{
+    if (!data)
+        return (uint32_t)passed_null_pointer;
+    twi_transfer_done = false;
+    uint32_t err = 0;
+    switch (twi_ins)
+    {
+    case 0:
+        err = nrf_drv_twi_tx(&m_twi_0, twi_addr, data, size, false);
+        while (twi_transfer_done == false)
+            ;
+    case 1:
+        err = nrf_drv_twi_tx(&m_twi_1, twi_addr, data, size, false);
+        while (twi_transfer_done == false)
+            ;
+    }
+    return err;
+}
+
+/**
+ * @brief TWI Read, involves sending command with tx and then reading with rx
+ * @param twi_ins TWI instance
+ * @param addr I2C address
+ * @param data Data pointer
+ * @param size Data size
+ */
+uint32_t
+twi_read(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *cmd,
+         size_t cmd_size, uint8_t *data, size_t data_size)
+{
+    if (!data || !cmd)
+        return passed_null_pointer;
+    twi_transfer_done = false;
+    uint32_t err = 0;
+    err = twi_tx(twi_ins, twi_addr, cmd, cmd_size);
+    if (err)
+        return err;
+    err = twi_rx(twi_ins, twi_addr, data, data_size);
+    if (err)
+        return err;
     return err;
 }

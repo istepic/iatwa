@@ -9,15 +9,23 @@
 
 #include "my_errors.h"
 
-union Sample
-{
-    uint8_t byte[1];
-    uint8_t two_bytes[2];
-    uint8_t three_bytes[3];
-};
+#define TWI_INS_0 0
+#define TWI_INS_1 1
 
 uint32_t twi_init(void);
-uint32_t twi_rx(const uint8_t, const uint8_t);
-uint32_t twi_tx(const uint8_t, const uint8_t, uint8_t *, uint8_t);
+uint32_t twi_rx(const uint8_t twi_ins,
+                const uint8_t addr,
+                uint8_t *data,
+                size_t size);
+uint32_t twi_tx(const uint8_t twi_ins,
+                const uint8_t addr,
+                uint8_t *data,
+                size_t size);
+uint32_t twi_read(const uint8_t twi_ins,
+                  const uint8_t twi_addr,
+                  uint8_t *cmd,
+                  size_t cmd_size,
+                  uint8_t *data,
+                  size_t data_size);
 
 #endif
