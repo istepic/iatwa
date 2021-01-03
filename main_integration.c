@@ -25,6 +25,8 @@ bmp388_twi_write(uint8_t reg_addr, const uint8_t *reg_data,
                  uint32_t len, void *intf_ptr)
 {
     uint32_t err = 0;
+    err = twi_write(TWI_INS_0, *(uint8_t *)intf_ptr, &reg_addr, sizeof(reg_addr),
+                   reg_data, len);
     return err;
 }
 

@@ -27,5 +27,11 @@ uint32_t twi_read(const uint8_t twi_ins,
                   size_t cmd_size,
                   uint8_t *data,
                   size_t data_size);
+uint32_t twi_write(const uint8_t twi_ins,
+                  const uint8_t twi_addr,
+                  uint8_t *cmd,
+                  size_t cmd_size,
+                  const uint8_t *data,
+                  size_t data_size);
 
 #endif
