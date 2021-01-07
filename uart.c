@@ -1,5 +1,18 @@
 #include "uart.h"
 
+static void
+uart_error_handle(app_uart_evt_t * p_event)
+{
+    if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
+    {
+        bsp_board_leds_on();
+    }
+    else if (p_event->evt_type == APP_UART_FIFO_ERROR)
+    {
+        bsp_board_leds_on();
+    }
+}
+
 uint32_t
 uart_init(void)
 {
@@ -15,7 +28,7 @@ uart_init(void)
     };
 
     APP_UART_FIFO_INIT(&uart_conf, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE,
-                       NULL, APP_IRQ_PRIORITY_LOWEST,
+                       uart_error_handle, APP_IRQ_PRIORITY_LOWEST,
                        err);
 
     return err;
