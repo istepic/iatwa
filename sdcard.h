@@ -4,7 +4,7 @@
 #include "nrf_block_dev_sdc.h"
 #include "ff.h"
 #include "diskio_blkdev.h"
-#include "boards.h"
+#include "bsp.h"
 
 uint32_t sd_write(char *, size_t);
 

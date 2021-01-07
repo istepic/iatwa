@@ -18,10 +18,10 @@
 #define SENSORDATA_BUF_SIZE 512
 #define NUM_OF_SENSORS 4
 
-static enum {
+enum {
     MS5611,
     BMP388,
-} Sensors;
+};
 
 struct sensor_data {
     int32_t ms5611_pres;
