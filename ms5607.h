@@ -1,5 +1,5 @@
-#ifndef MS5611_H
-#define MS5611_H
+#ifndef MS5607_H
+#define MS5607_H
 
 #include <stdint.h>
 #include <string.h>
@@ -10,6 +10,6 @@
 #include "my_errors.h"
 
 // Interface
-uint32_t ms5611_get_data(int32_t *, int32_t *);
+uint32_t ms5607_get_data(int32_t *, int32_t *);
 
 #endif

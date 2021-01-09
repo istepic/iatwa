@@ -149,27 +149,3 @@ twi_read(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *cmd,
     return err;
 }
 
-/**
- * @brief TWI Write, involves sending command with tx to select register
- * and then transfering data to it
- * @param twi_ins TWI instance
- * @param addr I2C address
- * @param data Data pointer
- * @param size Data size
- */
-uint32_t
-twi_write(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *cmd,
-         size_t cmd_size, const uint8_t *data, size_t data_size)
-{
-    if (!data || !cmd)
-        return passed_null_pointer;
-    twi_transfer_done = false;
-    uint32_t err = 0;
-    err = twi_tx(twi_ins, twi_addr, cmd, cmd_size);
-    if (err)
-        return err;
-    err = twi_tx(twi_ins, twi_addr, (uint8_t *)data, data_size); // TODO: remove this ugly cast
-    if (err)
-        return err;
-    return err;
-}

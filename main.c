@@ -10,7 +10,7 @@
 #include "my_errors.h"
 #include "my_util.h"
 
-#include "ms5611.h"
+#include "ms5607.h"
 #include "bmp3.h"
 
 #include "main_integration.h"
@@ -19,13 +19,13 @@
 #define NUM_OF_SENSORS 4
 
 enum {
-    MS5611,
+    MS5607,
     BMP388,
 };
 
 struct sensor_data {
-    int32_t ms5611_pres;
-    int32_t ms5611_temp;
+    int32_t ms5607_pres;
+    int32_t ms5607_temp;
     uint64_t bmp388_pres;
     int64_t bmp388_temp;
 };
@@ -36,14 +36,14 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
     uint32_t err = 0;
     switch(sensor)
     {
-    case MS5611: ;
+    case MS5607: ;
         int32_t p = 0;
         int32_t T = 0;
-        err = ms5611_get_data(&p, &T);
+        err = ms5607_get_data(&p, &T);
         if (err)
             return err;
-        sdata->ms5611_pres = p;
-        sdata->ms5611_temp = T;
+        sdata->ms5607_pres = p;
+        sdata->ms5607_temp = T;
         break;
     case BMP388: ;
         struct bmp3_data bdata;

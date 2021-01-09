@@ -4,7 +4,7 @@ project(diplomski_rad LANGUAGES C ASM)
 list(APPEND CMAKE_MODULE_PATH "cmake")
 include("nrf5")
 
-add_executable(iatwa "main.c" "uart.c" "sdcard.c" "ms5611.c" "bmp3.c" "main_integration.c" "twi.c" "my_util.c")
+add_executable(iatwa "main.c" "uart.c" "sdcard.c" "ms5607.c" "bmp3.c" "main_integration.c" "twi.c" "my_util.c")
 nrf5_target(iatwa)
 nrf5_target_link_libraries(iatwa PRIVATE
     # basic stuff
