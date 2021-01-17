@@ -1,4 +1,4 @@
-#include "main_integration.h"
+#include "bmp_integration.h"
 
 static int8_t bmp388_twi_read(uint8_t reg_addr, uint8_t *reg_data,
                               uint32_t len, void *intf_ptr);
@@ -15,7 +15,7 @@ bmp388_twi_read(uint8_t reg_addr, uint8_t *reg_data,
                 uint32_t len, void *intf_ptr)
 {
     uint32_t err = 0;
-    err = twi_read(TWI_INS_0, *(uint8_t *)intf_ptr, &reg_addr, sizeof(reg_addr),
+    err = twi_read(TWI_INS_0, *(const uint8_t *)intf_ptr, reg_addr,
                    reg_data, len);
     return err;
 }
@@ -25,7 +25,8 @@ bmp388_twi_write(uint8_t reg_addr, const uint8_t *reg_data,
                  uint32_t len, void *intf_ptr)
 {
     uint32_t err = 0;
-    err = twi_tx(TWI_INS_0, *(uint8_t *)intf_ptr, (uint8_t *)reg_data, len);
+    err = twi_write(TWI_INS_0, *(const uint8_t *)intf_ptr, reg_addr,
+                    reg_data, len);
     return err;
 }
 

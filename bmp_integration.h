@@ -1,5 +1,5 @@
-#ifndef MAIN_INTEGRATION_H
-#define MAIN_INTEGRATION_H
+#ifndef BMP_INTEGRATION_H
+#define BMP_INTEGRATION_H
 
 #include <stdio.h>
 #include <stddef.h>

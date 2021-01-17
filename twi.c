@@ -104,7 +104,7 @@ twi_rx(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *data,
  * @param size Data size
  */
 uint32_t
-twi_tx(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *data,
+twi_tx(const uint8_t twi_ins, const uint8_t twi_addr, const uint8_t *data,
        size_t size)
 {
     if (!data)
@@ -126,21 +126,22 @@ twi_tx(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *data,
 }
 
 /**
- * @brief TWI Read, involves sending command with tx and then reading with rx
+ * @brief TWI Read, read multiple bytes from registers
  * @param twi_ins TWI instance
  * @param addr I2C address
+ * @param cmd Command, usually used for selecting reg addr
  * @param data Data pointer
  * @param size Data size
  */
 uint32_t
-twi_read(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *cmd,
-         size_t cmd_size, uint8_t *data, size_t data_size)
+twi_read(const uint8_t twi_ins, const uint8_t twi_addr, const uint8_t cmd,
+         uint8_t *data, size_t data_size)
 {
-    if (!data || !cmd)
+    if (!data)
         return passed_null_pointer;
     twi_transfer_done = false;
     uint32_t err = 0;
-    err = twi_tx(twi_ins, twi_addr, cmd, cmd_size);
+    err = twi_tx(twi_ins, twi_addr, &cmd, sizeof(cmd));
     if (err)
         return err;
     err = twi_rx(twi_ins, twi_addr, data, data_size);
@@ -149,3 +150,31 @@ twi_read(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t *cmd,
     return err;
 }
 
+/**
+ * @brief TWI Write, write multiple bytes after cmd (cmd is usually reg addr)
+ * @param twi_ins TWI instance
+ * @param addr I2C address
+ * @param cmd Command, usually used for selecting reg addr
+ * @param data Data pointer
+ * @param size Data size
+ */
+uint32_t
+twi_write(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t cmd,
+          const uint8_t *data, size_t data_size)
+{
+    if (!data)
+        return passed_null_pointer;
+    twi_transfer_done = false;
+    uint32_t err = 0;
+    uint8_t *message = malloc(data_size + sizeof(cmd));
+
+    message[0] = cmd;
+    memcpy(message + 1, data, data_size);
+
+    err = twi_tx(twi_ins, twi_addr, message, data_size + sizeof(cmd));
+    if (err)
+        goto out;
+out:
+    free(message);
+    return err;
+}

@@ -70,7 +70,7 @@ ms5607_get_coeffs(uint16_t *coeffs)
         /* each ROM register has to be accessed by sending 1010xyz0 where xyz
            are 3 bits representing 1 register, there are total of 8 registers */
         cmd = MS5607_PROM_READ_FROM_START + i * 2;
-        err = twi_read(TWI_INS_1, MS5607_ADDR, &cmd, sizeof(cmd),
+        err = twi_read(TWI_INS_1, MS5607_ADDR, (const uint8_t)cmd,
                  coeff_sample, sizeof(coeff_sample));
         if (err)
             return err;
@@ -106,7 +106,7 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     nrf_delay_ms(10);
 
     cmd = MS5607_READ_ADC;
-    twi_read(TWI_INS_1, MS5607_ADDR, &cmd, sizeof(cmd),
+    twi_read(TWI_INS_1, MS5607_ADDR, (const uint8_t)cmd,
                  data_sample, sizeof(data_sample));
     pres_data = (data_sample[0] << 16) |
                 (data_sample[1] << 8) |
@@ -119,7 +119,7 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     nrf_delay_ms(10);
 
     cmd = MS5607_READ_ADC;
-    twi_read(TWI_INS_1, MS5607_ADDR, &cmd, sizeof(cmd),
+    twi_read(TWI_INS_1, MS5607_ADDR, (const uint8_t)cmd,
              data_sample, sizeof(data_sample));
     temp_data = (data_sample[0] << 16) |
                 (data_sample[1] << 8) |

@@ -12,8 +12,7 @@
 
 #include "ms5607.h"
 #include "bmp3.h"
-
-#include "main_integration.h"
+#include "bmp_integration.h"
 
 #define SENSORDATA_BUF_SIZE 512
 #define NUM_OF_SENSORS 4
