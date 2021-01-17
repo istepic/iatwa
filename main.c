@@ -13,6 +13,7 @@
 #include "ms5607.h"
 #include "bmp3.h"
 #include "bmp_integration.h"
+#include "dps368.h"
 
 #define SENSORDATA_BUF_SIZE 512
 #define NUM_OF_SENSORS 4
@@ -20,6 +21,7 @@
 enum {
     MS5607,
     BMP388,
+    DPS368,
 };
 
 struct sensor_data {
@@ -27,6 +29,8 @@ struct sensor_data {
     int32_t ms5607_temp;
     uint64_t bmp388_pres;
     int64_t bmp388_temp;
+    int32_t dps368_pres;
+    int32_t dps368_temp;
 };
 
 static uint32_t
@@ -36,13 +40,13 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
     switch(sensor)
     {
     case MS5607: ;
-        int32_t p = 0;
-        int32_t T = 0;
-        err = ms5607_get_data(&p, &T);
+        int32_t ms5607_p = 0;
+        int32_t ms5607_T = 0;
+        err = ms5607_get_data(&ms5607_p, &ms5607_T);
         if (err)
             return err;
-        sdata->ms5607_pres = p;
-        sdata->ms5607_temp = T;
+        sdata->ms5607_pres = ms5607_p;
+        sdata->ms5607_temp = ms5607_T;
         break;
     case BMP388: ;
         struct bmp3_data bdata;
@@ -52,6 +56,15 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
             return err;
         sdata->bmp388_pres = bdata.pressure;
         sdata->bmp388_temp = bdata.temperature;
+        break;
+    case DPS368: ;
+        int32_t dps368_p = 0;
+        int32_t dps368_T = 0;
+        err = dps368_get_data(&dps368_p, &dps368_T);
+        if (err)
+            return err;
+        sdata->dps368_pres = dps368_p;
+        sdata->dps368_temp = dps368_T;
         break;
     default:
         return reached_default;

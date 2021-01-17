@@ -4,17 +4,18 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "nrf_delay.h"
 #include "twi.h"
 
 #define DPS368_I2C_ADDRESS 0x77
 
-#define DPS368_PSR_B2 0x00
-#define DPS368_PSR_B1 0x01
-#define DPS368_PSR_B0 0x02
+#define DPS368_PRS_B2 0x00
+#define DPS368_PRS_B1 0x01
+#define DPS368_PRS_B0 0x02
+#define DPS368_PRS_BASE 0x00
 #define DPS368_TMP_B2 0x03
 #define DPS368_TMP_B1 0x04
 #define DPS368_TMP_B0 0x05
+#define DPS368_TMP_BASE 0x03
 #define DPS368_PRS_CFG 0x06
 #define DPS368_TMP_CFG 0x07
 #define DPS368_MEAS_CFG 0x08
@@ -48,22 +49,22 @@
 
 #define NUMBER_OF_COEF_REGISTERS 18
 
-#define DPS368_START_PRS_MEAS 0x01
-#define DPS368_START_TMP_MEAS 0x02
+#define SCALE_FACTOR_1X 524288
+#define SCALE_FACTOR_16X 253952
 
 struct dps368_coeffs {
-    uint16_t c0;
-    uint16_t c1;
-    uint32_t c00;
-    uint32_t c10;
-    uint16_t c01;
-    uint16_t c11;
-    uint16_t c20;
-    uint16_t c21;
-    uint16_t c30;
+    int16_t c0;
+    int16_t c1;
+    int32_t c00;
+    int32_t c10;
+    int16_t c01;
+    int16_t c11;
+    int16_t c20;
+    int16_t c21;
+    int16_t c30;
 };
 
 uint32_t dps368_init(void);
-uint32_t dps368_get_data(uint32_t *, uint32_t *);
+uint32_t dps368_get_data(int32_t *, int32_t *);
 
 #endif

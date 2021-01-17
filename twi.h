@@ -1,6 +1,7 @@
 #ifndef TWI_H
 #define TWI_H
 
+#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <malloc.h>
