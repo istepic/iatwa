@@ -6,7 +6,7 @@ static int8_t bmp388_twi_write(uint8_t reg_addr, const uint8_t *reg_data,
                                uint32_t len, void *intf_ptr);
 static void bmp388_delay_us(uint32_t period, void *intf_ptr);
 
-struct bmp3_dev dev;
+static struct bmp3_dev dev;
 
 /* +++++++++ Read, Write and Delay functions for "struct bmp3_dev" ++++++++++ */
 

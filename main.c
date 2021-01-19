@@ -14,6 +14,7 @@
 #include "bmp3.h"
 #include "bmp_integration.h"
 #include "dps368.h"
+#include "smpb.h"
 
 #define SENSORDATA_BUF_SIZE 512
 #define NUM_OF_SENSORS 4
@@ -22,6 +23,7 @@ enum {
     MS5607,
     BMP388,
     DPS368,
+    SMPB,
 };
 
 struct sensor_data {
@@ -31,6 +33,8 @@ struct sensor_data {
     int64_t bmp388_temp;
     int32_t dps368_pres;
     int32_t dps368_temp;
+    double smpb_pres;
+    double smpb_temp;
 };
 
 static uint32_t
@@ -65,6 +69,15 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
             return err;
         sdata->dps368_pres = dps368_p;
         sdata->dps368_temp = dps368_T;
+        break;
+    case SMPB: ;
+        double smpb_p = 0;
+        double smpb_T = 0;
+        err = smpb_get_data(&smpb_p, &smpb_T);
+        if (err)
+            return err;
+        sdata->smpb_pres = smpb_p;
+        sdata->smpb_temp = smpb_T;
         break;
     default:
         return reached_default;
@@ -121,6 +134,12 @@ int main(void)
     if((err = (uint32_t)bmp388_init()))
         bsp_board_leds_on();
     printf("BMP388 Initialized\r\n");
+    if((err = dps368_init()))
+        bsp_board_leds_on();
+    printf("DPS368 Initialized\r\n");
+    if((err = smpb_init()))
+        bsp_board_leds_on();
+    printf("2SMPB-02E Initialized\r\n");
 
     while(1)
     {

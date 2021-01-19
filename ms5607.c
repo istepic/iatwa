@@ -1,27 +1,7 @@
 #include "ms5607.h"
 
-// MS5607 device address
-#define MS5607_ADDR 0x76
-
-// MS5607 device commands
-#define MS5607_RESET_COMMAND 0x1E
-#define MS5607_START_PRESSURE_ADC_CONVERSION 0x48
-#define MS5607_START_TEMPERATURE_ADC_CONVERSION 0x58
-#define MS5607_READ_ADC 0x00
-
-// MS5607 Conversion time delay
-#define MS5607_CONVERSION_TIME_OSR_4096 10 // miliseconds
-
-#define MS5607_PROM_READ_FROM_START 0xA0
-
-#define MS5607_CRC_INDEX 7
-#define MS5607_PRESSURE_SENSITIVITY_INDEX 1
-#define MS5607_PRESSURE_OFFSET_INDEX 2
-#define MS5607_TEMP_COEFF_OF_PRESSURE_SENSITIVITY_INDEX 3
-#define MS5607_TEMP_COEFF_OF_PRESSURE_OFFSET_INDEX 4
-#define MS5607_REFERENCE_TEMPERATURE_INDEX 5
-#define MS5607_TEMP_COEFF_OF_TEMPERATURE_INDEX 6
-#define MS5607_COEFFICIENT_NUMBERS 8
+static uint16_t coeffs[8];
+static bool coeffs_read;
 
 static bool
 ms5607_crc_check(uint16_t *n_prom, uint8_t crc)
@@ -76,6 +56,7 @@ ms5607_get_coeffs(uint16_t *coeffs)
             return err;
         coeffs[i] = (coeff_sample[0] << 8) | coeff_sample[1];
     }
+    coeffs_read = true;
     if (!ms5607_crc_check(coeffs, coeffs[7] & 0x000F))
         return (uint32_t)crc_check_failed;
     return 0;
@@ -86,7 +67,6 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
 {
     if (!pres)
         return (uint32_t)passed_null_pointer;
-    uint16_t coeffs[8] = {0};
     uint32_t err = 0;
     uint32_t pres_data = 0;
     uint32_t temp_data = 0;
@@ -95,10 +75,12 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     int64_t OFF, SENS, T2, OFF2, SENS2;
     int32_t dT, TEMP, P;
 
-    err = ms5607_get_coeffs(coeffs);
-    if (err)
-        return err;
-
+    if (coeffs_read == false)
+    {
+        err = ms5607_get_coeffs(coeffs);
+        if (err)
+            return err;
+    }
     cmd = MS5607_START_PRESSURE_ADC_CONVERSION;
     err = twi_tx(TWI_INS_1, MS5607_ADDR, &cmd, sizeof cmd);
     if (err)

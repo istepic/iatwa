@@ -13,21 +13,20 @@ dps368_get_coeffs(void)
     // Wait for coefficient registers to be ready for reading
     while ((coef_ready & 0x80) == 0)
     {
-        err = twi_read(TWI_INS_0, DPS368_I2C_ADDRESS,
+        err = twi_read(TWI_INS_1, DPS368_I2C_ADDRESS,
                        DPS368_MEAS_CFG, &coef_ready, sizeof(coef_ready));
         if (err)
             return err;
     }
 
-    err = twi_read(TWI_INS_0, DPS368_I2C_ADDRESS,
+    err = twi_read(TWI_INS_1, DPS368_I2C_ADDRESS,
                 DPS368_REG_COEF_START_ADDR, coeffs, sizeof(coeffs));
     if (err)
         return err;
-
-    coef_struct.c0 = coeffs[0] << 4 | coeffs[1] >> 4;
+    coef_struct.c0 = (coeffs[0] << 4 | coeffs[1] >> 4) - (2 << 11);
     coef_struct.c1 = (coeffs[1] & 0x0F) << 8 | coeffs[2];
-    coef_struct.c00 = coeffs[3] << 12 | coeffs[4] << 4 | coeffs[5] >> 4;
-    coef_struct.c10 = (coeffs[5] & 0x0F) << 16 | coeffs[6] << 8 | coeffs[7];
+    coef_struct.c00 = (coeffs[3] << 12 | coeffs[4] << 4 | coeffs[5] >> 4) - (2 << 19);
+    coef_struct.c10 = ((coeffs[5] & 0x0F) << 16 | coeffs[6] << 8 | coeffs[7]) - (2 << 19);
     coef_struct.c01 = coeffs[8] << 8 | coeffs[9];
     coef_struct.c11 = coeffs[10] << 8 | coeffs[11];
     coef_struct.c20 = coeffs[12] << 8 | coeffs[13];
@@ -104,7 +103,7 @@ dps368_get_data(int32_t *p, int32_t *T)
                    temperature, sizeof(temperature));
     if(err)
         return err;
-    int32_t T_uncomp = temperature[0] << 16 | temperature[1] << 8 | temperature[2];
+    int32_t T_uncomp = (temperature[0] << 16 | temperature[1] << 8 | temperature[2]) - (2 << 23);
 
     // Get pressure data
     uint8_t start_prs_measurement = 0x01;
@@ -123,7 +122,7 @@ dps368_get_data(int32_t *p, int32_t *T)
     uint8_t pressure[3] = {0};
     err = twi_read(TWI_INS_1, DPS368_I2C_ADDRESS, DPS368_PRS_BASE,
                    pressure, sizeof(temperature));
-    int32_t p_uncomp = pressure[0] << 16 | pressure[1] << 8 | pressure[2];
+    int32_t p_uncomp = (pressure[0] << 16 | pressure[1] << 8 | pressure[2]) - (2 << 23);
 
     int32_t Praw_sc = p_uncomp / SCALE_FACTOR_16X;
     int32_t Traw_sc = T_uncomp / SCALE_FACTOR_1X;

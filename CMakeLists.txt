@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
-project(diplomski_rad LANGUAGES C ASM)
+project(iatwa LANGUAGES C ASM)
 
 list(APPEND CMAKE_MODULE_PATH "cmake")
 include("nrf5")
 
-add_executable(iatwa "main.c" "uart.c" "sdcard.c" "ms5607.c" "bmp3.c" "bmp_integration.c" "twi.c" "my_util.c" "dps368.c")
+add_executable(iatwa "main.c" "uart.c" "sdcard.c" "ms5607.c" "bmp3.c" "bmp_integration.c" "twi.c" "my_util.c" "dps368.c" "smpb.c")
 nrf5_target(iatwa)
 nrf5_target_link_libraries(iatwa PRIVATE
     # basic stuff
@@ -20,3 +20,5 @@ nrf5_target_link_libraries(iatwa PRIVATE
     # twi stuff
     nrf5_drv_twi
  )
+
+ target_link_libraries(iatwa PRIVATE m)

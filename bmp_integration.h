@@ -6,10 +6,7 @@
 #include <string.h>
 
 #include "bmp3.h"
-
 #include "twi.h"
-#include "my_errors.h"
-#include "my_util.h"
 
 #include "nrf_delay.h"
 
