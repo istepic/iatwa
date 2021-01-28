@@ -31,8 +31,8 @@ struct sensor_data {
     int32_t ms5607_temp;
     uint64_t bmp388_pres;
     int64_t bmp388_temp;
-    int32_t dps368_pres;
-    int32_t dps368_temp;
+    float dps368_pres;
+    float dps368_temp;
     double smpb_pres;
     double smpb_temp;
 };
@@ -43,32 +43,38 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
     uint32_t err = 0;
     switch(sensor)
     {
-    case MS5607: ;
-        int32_t ms5607_p = 0;
-        int32_t ms5607_T = 0;
-        err = ms5607_get_data(&ms5607_p, &ms5607_T);
-        if (err)
-            return err;
-        sdata->ms5607_pres = ms5607_p;
-        sdata->ms5607_temp = ms5607_T;
-        break;
-    case BMP388: ;
-        struct bmp3_data bdata;
-        memset(&bdata, 0, sizeof(struct bmp3_data));
-        err = (uint32_t)bmp388_get_data(&bdata);
-        if (err)
-            return err;
-        sdata->bmp388_pres = bdata.pressure;
-        sdata->bmp388_temp = bdata.temperature;
-        break;
+    case MS5607: break;
+//        int32_t ms5607_p = 0;
+//        int32_t ms5607_T = 0;
+//        err = ms5607_get_data(&ms5607_p, &ms5607_T);
+//        if (err)
+//            return err;
+//        sdata->ms5607_pres = ms5607_p;
+//        sdata->ms5607_temp = ms5607_T;
+//        break;
+    case BMP388: break;
+//        struct bmp3_data bdata;
+//        memset(&bdata, 0, sizeof(struct bmp3_data));
+//        err = (uint32_t)bmp388_get_data(&bdata);
+//        if (err)
+//            return err;
+//        sdata->bmp388_pres = bdata.pressure;
+//        sdata->bmp388_temp = bdata.temperature;
+//        break;
     case DPS368: ;
-        int32_t dps368_p = 0;
-        int32_t dps368_T = 0;
+        printf("Getting DPS368 Data\r\n");
+        float dps368_p = 0;
+        float dps368_T = 0;
         err = dps368_get_data(&dps368_p, &dps368_T);
         if (err)
             return err;
         sdata->dps368_pres = dps368_p;
         sdata->dps368_temp = dps368_T;
+        char buffer1[32] = {0};
+        float_to_string(dps368_p, buffer1, sizeof buffer1);
+        char buffer2[32] = {0};
+        float_to_string(dps368_T, buffer2, sizeof buffer2);
+        //printf("DPS368 press: %s   temp: %s\r\n", buffer1, buffer2);
         break;
     case SMPB: ;
         double smpb_p = 0;
@@ -78,6 +84,11 @@ get_sensordata(size_t sensor, struct sensor_data *sdata)
             return err;
         sdata->smpb_pres = smpb_p;
         sdata->smpb_temp = smpb_T;
+        //char buffer1[32] = {0};
+        //float_to_string(smpb_p, buffer1, sizeof buffer1);
+        //char buffer2[32] = {0};
+        //float_to_string(smpb_T, buffer2, sizeof buffer2);
+        //printf("SMPB %s %s\r\n", buffer1, buffer2);
         break;
     default:
         return reached_default;
@@ -123,7 +134,7 @@ int main(void)
 {
     uint32_t err = 0;
     struct sensor_data sdata;
-
+    nrf_delay_ms(40); // Some sensors need time to initalize
     bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
     if ((err = uart_init()) != NRF_SUCCESS)
         bsp_board_leds_on();
@@ -131,9 +142,9 @@ int main(void)
     if ((err = twi_init()) != NRF_SUCCESS)
         bsp_board_leds_on();
     printf("TWI Initialized\r\n");
-    if((err = (uint32_t)bmp388_init()))
-        bsp_board_leds_on();
-    printf("BMP388 Initialized\r\n");
+//    if((err = (uint32_t)bmp388_init()))
+//       bsp_board_leds_on();
+//    printf("BMP388 Initialized\r\n");
     if((err = dps368_init()))
         bsp_board_leds_on();
     printf("DPS368 Initialized\r\n");
@@ -145,14 +156,16 @@ int main(void)
     {
         if ((err = get_data(&sdata)))
         {
+            printf("Something went wrong with fetching the sensor data ERROR %lu\r\n", err);
             bsp_board_leds_on();
             break;
         }
-        if ((err = sd_write_sensordata(&sdata)))
-        {
-            bsp_board_leds_on();
-            break;
-        }
+        nrf_delay_ms(2000);
+//        if ((err = sd_write_sensordata(&sdata)))
+//        {
+//            bsp_board_leds_on();
+//            break;
+//        }
     }
     return 0;
 }

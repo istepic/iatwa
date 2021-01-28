@@ -1,7 +1,7 @@
 #include "twi.h"
 
-static const nrf_drv_twi_t m_twi_0 = NRF_DRV_TWI_INSTANCE(0);
-static const nrf_drv_twi_t m_twi_1 = NRF_DRV_TWI_INSTANCE(1);
+const nrf_drv_twi_t m_twi_0 = NRF_DRV_TWI_INSTANCE(0);
+const nrf_drv_twi_t m_twi_1 = NRF_DRV_TWI_INSTANCE(1);
 static volatile bool twi_transfer_done;
 
 static void
@@ -164,17 +164,17 @@ twi_write(const uint8_t twi_ins, const uint8_t twi_addr, uint8_t cmd,
 {
     if (!data)
         return passed_null_pointer;
+    if (data_size > 31)
+        return message_too_large;
     twi_transfer_done = false;
     uint32_t err = 0;
-    uint8_t *message = malloc(data_size + sizeof(cmd));
+    uint8_t message[32] = {0};
 
     message[0] = cmd;
     memcpy(message + 1, data, data_size);
 
     err = twi_tx(twi_ins, twi_addr, message, data_size + sizeof(cmd));
     if (err)
-        goto out;
-out:
-    free(message);
+        return err;
     return err;
 }

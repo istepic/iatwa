@@ -1,7 +1,8 @@
-#include "my_util.h"
-
 #include <math.h>
 #include <stdio.h>
+#include <stdint.h>
+
+#include "my_util.h"
 
 // Reverses a string 'str' of length 'len'
 static void reverse(char *str, int len)
@@ -64,4 +65,14 @@ void float_to_string(float n, char *res, int afterpoint)
 
         intToStr((int)fpart, res + i + 1, afterpoint);
     }
+}
+
+void getTwosComplement(int32_t *raw, uint8_t length)
+{
+    if (raw == NULL)
+        return;
+	if (*raw & ((uint32_t)1 << (length - 1)))
+	{
+		*raw -= (uint32_t)1 << length;
+	}
 }

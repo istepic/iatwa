@@ -5,6 +5,8 @@
 #include <stddef.h>
 
 #include "twi.h"
+#include "nrf_delay.h"
+#include "my_util.h"
 
 #define DPS368_I2C_ADDRESS 0x77
 
@@ -53,18 +55,18 @@
 #define SCALE_FACTOR_16X 253952
 
 struct dps368_coeffs {
-    int16_t c0;
-    int16_t c1;
+    int32_t c0;
+    int32_t c1;
     int32_t c00;
     int32_t c10;
-    int16_t c01;
-    int16_t c11;
-    int16_t c20;
-    int16_t c21;
-    int16_t c30;
+    int32_t c01;
+    int32_t c11;
+    int32_t c20;
+    int32_t c21;
+    int32_t c30;
 };
 
 uint32_t dps368_init(void);
-uint32_t dps368_get_data(int32_t *, int32_t *);
+uint32_t dps368_get_data(float *, float *);
 
 #endif

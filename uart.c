@@ -18,8 +18,8 @@ uart_init(void)
 {
     uint32_t err;
     const app_uart_comm_params_t uart_conf = {
-        .rx_pin_no = UART_RX_PIN,
-        .tx_pin_no = UART_TX_PIN,
+        .rx_pin_no = RX_PIN_NUMBER,
+        .tx_pin_no = TX_PIN_NUMBER,
         .rts_pin_no = 0,
         .cts_pin_no = 0,
         .flow_control = 0,
