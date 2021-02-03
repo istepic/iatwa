@@ -119,13 +119,15 @@ DSTATUS disk_initialize(BYTE drv)
         {
             m_drives[drv].config.wait_func();
         }
-
         if (m_drives[drv].last_result == NRF_BLOCK_DEV_RESULT_SUCCESS)
         {
             m_drives[drv].state &= ~STA_NOINIT;
         }
     }
-
+    else
+    {
+        nrf_blk_dev_uninit(m_drives[drv].config.p_block_device);
+    }
     return m_drives[drv].state;
 }
 

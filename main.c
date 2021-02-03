@@ -19,6 +19,7 @@
 
 #define SENSORDATA_BUF_SIZE 512
 #define NUM_OF_SENSORS 3
+#define CONFIG_NFCT_PINS_AS_GPIOS
 
 enum {
 //    MS5607,
@@ -37,6 +38,22 @@ struct sensor_data {
     double smpb_pres;
     double smpb_temp;
 };
+
+static void
+enable_nfc_pins_as_gpio(void)
+{
+    #if defined (CONFIG_NFCT_PINS_AS_GPIOS)
+        if ((NRF_UICR->NFCPINS & UICR_NFCPINS_PROTECT_Msk) == (UICR_NFCPINS_PROTECT_NFC << UICR_NFCPINS_PROTECT_Pos)){
+            NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
+            while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+            NRF_UICR->NFCPINS &= ~UICR_NFCPINS_PROTECT_Msk;
+            while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+            NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos;
+            while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+            NVIC_SystemReset();
+        }
+    #endif
+}
 
 static uint32_t
 get_sensordata(size_t sensor, struct sensor_data *sdata)
@@ -108,7 +125,7 @@ sd_write_sensordata(struct sensor_data *sdata)
     char buf[64] = {0};
     for (size_t i = 0; i < NUM_OF_SENSORS; ++i)
     {
-        snprintf(buf, sizeof buf, "%f.2,%f.3;%f.2,%f.3;%f.2,%f.3;\r\n",
+        snprintf(buf, sizeof buf, "%.2f,%.3f;%.2f,%.3f;%.2f,%.3f\r\n",
                  sdata->bmp388_temp, sdata->bmp388_pres,
                  sdata->dps368_temp, sdata->dps368_pres,
                  sdata->smpb_temp, sdata->smpb_pres);
@@ -120,23 +137,34 @@ int main(void)
 {
     uint32_t err = 0;
     struct sensor_data sdata;
+    memset(&sdata, 0, sizeof(struct sensor_data));
+    enable_nfc_pins_as_gpio();
     nrf_delay_ms(40); // Some sensors need time to initalize
+
     bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
+    bsp_board_leds_on();
     if ((err = uart_init()) != NRF_SUCCESS)
+        printf("UART Error: %lu\r\n", err);
         bsp_board_leds_on();
     printf("### Application started ###\r\n");
     if ((err = twi_init()) != NRF_SUCCESS)
+        printf("TWI Error: %lu\r\n", err);
         bsp_board_leds_on();
     printf("TWI Initialized\r\n");
     if((err = (uint32_t)bmp388_init()))
+        printf("BMP388 Error: %lu\r\n", err);
        bsp_board_leds_on();
     printf("BMP388 Initialized\r\n");
     if((err = dps368_init()))
+        printf("DPS368 Error: %lu\r\n", err);
         bsp_board_leds_on();
     printf("DPS368 Initialized\r\n");
     if((err = smpb_init()))
+        printf("2SMPB Error: %lu\r\n", err);
         bsp_board_leds_on();
     printf("2SMPB-02E Initialized\r\n");
+
+    sd_write("\nMEASUREMENT\n", strlen("\nMEASUREMENT\n"));
 
     while(1)
     {
@@ -147,12 +175,12 @@ int main(void)
             break;
         }
         nrf_delay_ms(2000);
-       if ((err = sd_write_sensordata(&sdata)))
-       {
-           printf("Failed to write data to SD Card %lu\r\n", err);
-           bsp_board_leds_on();
-           break;
-       }
+        // if ((err = sd_write_sensordata(&sdata)))
+        // {
+        //     printf("Failed to write data to SD Card %lu\r\n", err);
+        //     bsp_board_leds_on();
+        //     break;
+        // }
     }
     return 0;
 }
