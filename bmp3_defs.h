@@ -55,6 +55,7 @@ extern "C" {
 #else
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 #endif
 
 /*************************** Common macros   *****************************/

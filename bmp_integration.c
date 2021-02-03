@@ -15,7 +15,7 @@ bmp388_twi_read(uint8_t reg_addr, uint8_t *reg_data,
                 uint32_t len, void *intf_ptr)
 {
     uint32_t err = 0;
-    err = twi_read(TWI_INS_0, *(const uint8_t *)intf_ptr, reg_addr,
+    err = twi_read(TWI_INS_0, BMP3_ADDR_I2C_PRIM, reg_addr,
                    reg_data, len);
     return err;
 }
@@ -25,7 +25,7 @@ bmp388_twi_write(uint8_t reg_addr, const uint8_t *reg_data,
                  uint32_t len, void *intf_ptr)
 {
     uint32_t err = 0;
-    err = twi_write(TWI_INS_0, *(const uint8_t *)intf_ptr, reg_addr,
+    err = twi_write(TWI_INS_0, BMP3_ADDR_I2C_PRIM, reg_addr,
                     reg_data, len);
     return err;
 }
@@ -58,8 +58,8 @@ bmp388_init(void)
     // Set sensor settings
     uint32_t settings_sel = 0;
     dev.settings.op_mode = BMP3_MODE_FORCED;
-    dev.settings.press_en = 1;
-    dev.settings.temp_en = 1;
+    dev.settings.press_en = BMP3_ENABLE;
+    dev.settings.temp_en = BMP3_ENABLE;
     dev.settings.odr_filter.press_os = BMP3_OVERSAMPLING_16X;
     dev.settings.odr_filter.temp_os = BMP3_OVERSAMPLING_2X;
     dev.settings.odr_filter.iir_filter = BMP3_IIR_FILTER_COEFF_7;
@@ -71,6 +71,8 @@ bmp388_init(void)
     err = (uint32_t)bmp3_set_sensor_settings(settings_sel, &dev);
     if (err)
         return err;
+    err = bmp3_set_op_mode(&dev);
+
     return err;
 }
 
@@ -81,6 +83,7 @@ bmp388_get_data(struct bmp3_data *comp_data)
     err = bmp3_set_op_mode(&dev);
     if (err)
         return err;
+    nrf_delay_ms(45);
     err = bmp3_get_sensor_data(BMP3_ALL, comp_data, &dev);
     if (err)
         return err;

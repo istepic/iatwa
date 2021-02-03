@@ -97,7 +97,7 @@ dps368_init(void)
 }
 
 uint32_t
-dps368_get_data(float *p, float *T)
+dps368_get_data(double *p, double *T)
 {
     uint32_t err = 0;
 
@@ -148,8 +148,8 @@ dps368_get_data(float *p, float *T)
     int32_t p_uncomp = ((uint32_t)pressure[0] << 16) | ((uint32_t)pressure[1] << 8) | (uint32_t)pressure[2];
     getTwosComplement(&p_uncomp, 24);
     //printf("DPS368 Uncomp data. Press: %ld, Temp: %ld\r\n", p_uncomp, T_uncomp);
-    double Praw_sc = p_uncomp / SCALE_FACTOR_16X;
-    double Traw_sc = T_uncomp / SCALE_FACTOR_1X;
+    double Praw_sc = (double)p_uncomp / SCALE_FACTOR_16X;
+    double Traw_sc = (double)T_uncomp / SCALE_FACTOR_1X; // castanje je ovdje bilo rjesenje, zasto?
     *T = coef_struct.c0 * 0.5 + coef_struct.c1 * Traw_sc;
     *p = coef_struct.c00 +
          Praw_sc * (coef_struct.c10 + Praw_sc * (coef_struct.c20 + Praw_sc * coef_struct.c30)) +

@@ -67,6 +67,6 @@ struct dps368_coeffs {
 };
 
 uint32_t dps368_init(void);
-uint32_t dps368_get_data(float *, float *);
+uint32_t dps368_get_data(double *, double *);
 
 #endif

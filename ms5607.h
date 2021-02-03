@@ -10,7 +10,7 @@
 #include "my_errors.h"
 
 // MS5607 device address
-#define MS5607_ADDR 0x76
+#define MS5607_ADDR 0x77
 
 // MS5607 device commands
 #define MS5607_RESET_COMMAND 0x1E

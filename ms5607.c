@@ -55,6 +55,7 @@ ms5607_get_coeffs(uint16_t *coeffs)
         if (err)
             return err;
         coeffs[i] = (coeff_sample[0] << 8) | coeff_sample[1];
+        printf("COEFFICIENT: %d\r\n", coeffs[i]);
     }
     coeffs_read = true;
     if (!ms5607_crc_check(coeffs, coeffs[7] & 0x000F))
@@ -74,7 +75,7 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     uint8_t cmd = 0;
     int64_t OFF, SENS, T2, OFF2, SENS2;
     int32_t dT, TEMP, P;
-
+    printf("UZIMAM OD MS5611\r\n");
     if (coeffs_read == false)
     {
         err = ms5607_get_coeffs(coeffs);
@@ -93,6 +94,7 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     pres_data = (data_sample[0] << 16) |
                 (data_sample[1] << 8) |
                 (data_sample[2]);
+    printf("press raw: %lu", pres_data);
 
     cmd = MS5607_START_TEMPERATURE_ADC_CONVERSION;
     err = twi_tx(TWI_INS_1, MS5607_ADDR, &cmd, sizeof cmd);
@@ -106,6 +108,7 @@ ms5607_get_data(int32_t *pres, int32_t *temp)
     temp_data = (data_sample[0] << 16) |
                 (data_sample[1] << 8) |
                 (data_sample[2]);
+    printf("temp raw: %lu", temp_data);
 
     // Difference between actual and reference temperature = D2 - Tref
     dT = (int32_t)temp_data -

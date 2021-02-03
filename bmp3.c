@@ -1401,7 +1401,6 @@ int8_t bmp3_get_sensor_data(uint8_t sensor_comp, struct bmp3_data *comp_data, st
         {
             /* Parse the read data from the sensor */
             parse_sensor_data(reg_data, &uncomp_data);
-
             /* Compensate the pressure/temperature/both data read
              * from the sensor */
             rslt = compensate_data(sensor_comp, &uncomp_data, comp_data, &dev->calib_data);
@@ -1682,7 +1681,6 @@ static int8_t write_power_mode(struct bmp3_dev *dev)
     if (rslt == BMP3_OK)
     {
         op_mode_reg_val = BMP3_SET_BITS(op_mode_reg_val, BMP3_OP_MODE, op_mode);
-
         /* Write the power mode in the register */
         rslt = bmp3_set_regs(&reg_addr, &op_mode_reg_val, 1, dev);
     }

@@ -4,73 +4,38 @@
 
 #include "my_util.h"
 
-// Reverses a string 'str' of length 'len'
-static void reverse(char *str, int len)
-{
-    int i = 0, j = len - 1, temp;
-    while (i < j)
-    {
-        temp = str[i];
-        str[i] = str[j];
-        str[j] = temp;
-        i++;
-        j--;
-    }
-}
-
-// Converts a given integer x to string str[].
-// d is the number of digits required in the output.
-// If d is more than the number of digits in x,
-// then 0s are added at the beginning.
-static int intToStr(int x, char str[], int d)
-{
-    int i = 0;
-    while (x)
-    {
-        str[i++] = (x % 10) + '0';
-        x = x / 10;
+char* float_to_string(float x, char *p) {
+    char *s = p + THIRTY_TWO_BITS; // go to end of buffer
+    uint16_t decimals;  // variable to store the decimals
+    int units;  // variable to store the units (part to left of decimal place)
+    if (x < 0) { // take care of negative numbers
+        decimals = (int)(x * -100) % 100; // make 1000 for 3 decimals etc.
+        units = (int)(-1 * x);
+    } else { // positive numbers
+        decimals = (int)(x * 100) % 100;
+        units = (int)x;
     }
 
-    // If number of digits required is more, then
-    // add 0s at the beginning
-    while (i < d)
-        str[i++] = '0';
+    *--s = (decimals % 10) + '0';
+    decimals /= 10; // repeat for as many decimal places as you need
+    *--s = (decimals % 10) + '0';
+    *--s = '.';
 
-    reverse(str, i);
-    str[i] = '\0';
-    return i;
-}
-
-// Converts a floating-point/double number to a string.
-void float_to_string(float n, char *res, int afterpoint)
-{
-    // Extract integer part
-    int ipart = (int)n;
-
-    // Extract floating part
-    float fpart = n - (float)ipart;
-
-    // convert integer part to string
-    int i = intToStr(ipart, res, 0);
-
-    // check for display option after point
-    if (afterpoint != 0)
-    {
-        res[i] = '.'; // add dot
-
-        // Get the value of fraction part upto given no.
-        // of points after dot. The third parameter
-        // is needed to handle cases like 233.007
-        fpart = fpart * 100;
-
-        intToStr((int)fpart, res + i + 1, afterpoint);
+    while (units > 0) {
+        *--s = (units % 10) + '0';
+        units /= 10;
     }
+    if (x < 0) *--s = '-'; // unary minus sign for negative numbers
+    return s;
 }
+
 
 void getTwosComplement(int32_t *raw, uint8_t length)
 {
     if (raw == NULL)
+    {
         return;
+    }
 	if (*raw & ((uint32_t)1 << (length - 1)))
 	{
 		*raw -= (uint32_t)1 << length;

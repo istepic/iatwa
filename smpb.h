@@ -6,6 +6,8 @@
 #include <stddef.h>
 
 #include "twi.h"
+#include "my_util.h"
+#include "nrf_delay.h"
 
 #define SMPB_I2C_ADDRESS 0x70
 
