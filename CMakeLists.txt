@@ -19,6 +19,10 @@ nrf5_target_link_libraries(iatwa PRIVATE
     nrf5_app_sdcard
     # twi stuff
     nrf5_drv_twi
+    # clock
+    nrf5_drv_clock
+    nrf5_app_timer
+    nrf5_app_scheduler
  )
 
  target_link_libraries(iatwa PRIVATE m)
