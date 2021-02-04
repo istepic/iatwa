@@ -2,7 +2,7 @@
 # import numpy as np
 # import scipy
 # from scipy import signal #for detrend purposes
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 import math
 
 # def moving_avg(x,n):
@@ -25,16 +25,28 @@ smpb_altitude = []
 for line in data.readlines():
     if line.find(';') == -1:
         continue
-    bmp388_altitude.append(line.split(";")[0])
-    dps368_altitude.append(line.split(";")[1])
-    smpb_altitude.append(line.split(";")[2])
+    bmp388_altitude.append(float(line.split(";")[0]))
+    dps368_altitude.append(float(line.split(";")[1]))
+    smpb_altitude.append(float(line.split(";")[2]))
 
-plt.plot(bmp388_altitude, 'r-', label='BMP388 Nadmorska visina')
-plt.plot(dps368_altitude, 'g-', label='BMP388 Nadmorska visina')
-plt.plot(smpb_altitude, 'b-', label='BMP388 Nadmorska visina')
-plt.legend()
+timestamps = []
+timestamps[:] = [x / 2.2 for x in range(len(bmp388_altitude))]
+time_unit = "s"
+
+if max(timestamps) > 14400:
+    timestamps[:] = [x / (3600*2.2) for x in range(len(bmp388_altitude))]
+    time_unit = "h"
+elif max(timestamps) > 300:
+    timestamps[:] = [x / (60*2.2) for x in range(len(bmp388_altitude))]
+    time_unit = "min"
+
+plt.plot(timestamps, bmp388_altitude, 'r-', label='BMP388')
+plt.plot(timestamps, dps368_altitude, 'g-', label='DPS368')
+plt.plot(timestamps, smpb_altitude, 'b-', label='2SMPB')
+plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
+           ncol=3, fancybox=True, shadow=True)
 plt.ylabel('Nadmorska visina, [m]')
-plt.xlabel('Uzorak, [n]')
+plt.xlabel('Vrijeme, [' + time_unit + ']')
 plt.show()
 
 
