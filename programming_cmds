@@ -1,0 +1,13 @@
+program /home/istep/nrf_sdk/nrf_sdk_17/components/softdevice/s132/hex/s132_nrf52_7.2.0_softdevice.hex verify
+program /home/istep/iatwa_DK/build/iatwa.hex verify
+
+/home/istep/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-objcopy -O ihex iatwa iatwa.hex
+
+
+arm-none-eabi-gdb iatwa
+target extended-remote localhost:3333
+
+program /home/istep/nrf_sdk/nrf_sdk_17/examples/peripheral/twi_scanner_bmp388/pca10040/blank/armgcc/_build/nrf52832_xxaa.hex verify
+program /home/istep/nrf_sdk/nrf_sdk_17/examples/ble_peripheral/ble_app_blinky/pca10040/s132/armgcc/_build/nrf52832_xxaa.hex verify
+
+/opt/openocd/bin/openocd -f interface/stlink.cfg -f target/nrf52.cfg -c "telnet_port pipe;log_output /dev/null"

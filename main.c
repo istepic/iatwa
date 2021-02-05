@@ -236,7 +236,6 @@ static uint32_t
 sd_write_sensordata(struct sensor_data *sdata)
 {
     char buf[64] = {0};
-    //double power = 1 / 5.257;
     double bmp388_altitude = - (double)45076.9231 * (pow(sdata->bmp388_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
     double dps368_altitude = - (double)45076.9231 * (pow(sdata->dps368_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
     double smpb_altitude = - (double)45076.9231 * (pow(sdata->smpb_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
@@ -308,7 +307,7 @@ int main(void)
     printf("2SMPB-02E Initialized\r\n");
 
     // Every time we reset, append "MEASUREMENT" to file that contains sensor data
-    sd_write("\nMEASUREMENT\n", strlen("\nMEASUREMENT\n"));
+    sd_write("MEASUREMENT\n", strlen("MEASUREMENT\n"));
 
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
     clock_init();
