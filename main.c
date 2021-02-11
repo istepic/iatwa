@@ -6,6 +6,7 @@
 
 #include "nrf_delay.h"
 #include "nrf_drv_clock.h"
+#include "nrf_drv_wdt.h"
 #include "app_timer.h"
 #include "app_scheduler.h"
 
@@ -34,8 +35,11 @@
 #define SCHED_QUEUE_SIZE            10
 
 // App timer settings
-#define TIME_INTERVAL APP_TIMER_TICKS(450)
+#define TIME_INTERVAL APP_TIMER_TICKS(600)
 APP_TIMER_DEF(m_app_timer_id);
+
+// Watchdog
+nrfx_wdt_channel_id m_channel_id;
 
 struct sensor_data {
     // int32_t ms5607_pres;
@@ -53,6 +57,7 @@ static void clock_init(void);
 static void app_timer_handler(void *);
 static void scheduler_event_handler(void *, uint16_t);
 static void timer_init(void);
+static void wdt_init(void);
 static void enable_nfc_pins_as_gpio(void);
 static void enable_reset_pin(void);
 static uint32_t get_sensordata(size_t, struct sensor_data *);
@@ -81,6 +86,35 @@ clock_init(void)
     nrf_drv_clock_lfclk_request(NULL);
 }
 
+/* Timer initialization */
+static void
+timer_init(void)
+{
+    uint32_t err = 0;
+    err = app_timer_init();
+    if (err)
+    {
+        printf("App Timer initialization failed: %lu\r\n", err);
+        return;
+    }
+    err = app_timer_create(&m_app_timer_id, APP_TIMER_MODE_REPEATED,
+                           app_timer_handler);
+    if (err)
+    {
+        printf("App Timer creation failed: %lu\r\n", err);
+        return;
+    }
+}
+
+/* This is interrupt handler for App timer. This is triggered every 100ms and
+all it does is it puts scheduler_event_handler to queue that is then ran in
+thread mode instead of interrupt mode. */
+static void
+app_timer_handler(void *p_context)
+{
+    app_sched_event_put(NULL, 0, scheduler_event_handler);
+}
+
 /* Schedueled function to be ran. This is where reading the sensor data and
    writing to SD card happens */
 static void
@@ -102,33 +136,24 @@ scheduler_event_handler(void *p_event_data, uint16_t event_size)
     }
 }
 
-/* This is interrupt handler for App timer. This is triggered every 100ms and
-all it does is it puts scheduler_event_handler to queue that is then ran in
-thread mode instead of interrupt mode. */
 static void
-app_timer_handler(void *p_context)
+wd_event_handler(void)
 {
-    app_sched_event_put(NULL, 0, scheduler_event_handler);
+    ;
 }
 
-/* Timer initialization */
 static void
-timer_init(void)
+wdt_init(void)
 {
     uint32_t err = 0;
-    err = app_timer_init();
+    nrfx_wdt_config_t w_config = NRFX_WDT_DEAFULT_CONFIG;
+    err = nrfx_wdt_init(&w_config, wd_event_handler);
     if (err)
-    {
-        printf("App Timer initialization failed: %lu\r\n", err);
-        return;
-    }
-    err = app_timer_create(&m_app_timer_id, APP_TIMER_MODE_REPEATED,
-                           app_timer_handler);
+        printf("Failed to initialize WDT: %lu\r\n", err);
+    err = nrfx_wdt_channel_alloc(&m_channel_id);
     if (err)
-    {
-        printf("App Timer creation failed: %lu\r\n", err);
-        return;
-    }
+        printf("Failed to allocate channel for WDT: %lu\r\n", err);
+    nrfx_wdt_enable();
 }
 
 static void
@@ -235,7 +260,7 @@ get_data(struct sensor_data *sdata)
 static uint32_t
 sd_write_sensordata(struct sensor_data *sdata)
 {
-    char buf[64] = {0};
+    char buf[128] = {0};
     double bmp388_altitude = - (double)45076.9231 * (pow(sdata->bmp388_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
     double dps368_altitude = - (double)45076.9231 * (pow(sdata->dps368_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
     double smpb_altitude = - (double)45076.9231 * (pow(sdata->smpb_pres / (double)101325, -(((double)GAS_CONSTANT * (double)(-0.0065)) / ((double)GRAVITY * (double)MOLAR_MASS_OF_AIR))) - 1);
@@ -249,10 +274,10 @@ sd_write_sensordata(struct sensor_data *sdata)
         //          sdata->bmp388_temp, sdata->bmp388_pres,
         //          sdata->dps368_temp, sdata->dps368_pres,
         //          sdata->smpb_temp, sdata->smpb_pres);
-        snprintf(buf, sizeof buf, "%.2f;%.2f;%.2f\r\n",
-                 bmp388_altitude,
-                 dps368_altitude,
-                 smpb_altitude);
+        snprintf(buf, sizeof buf, "%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f;%.2f\r\n",
+                 bmp388_altitude, sdata->bmp388_temp, sdata->bmp388_pres,
+                 dps368_altitude, sdata->dps368_temp, sdata->dps368_pres,
+                 smpb_altitude, sdata->smpb_temp, sdata->smpb_pres);
     }
     return sd_write(buf, strlen(buf));
 }
@@ -318,9 +343,11 @@ int main(void)
         bsp_board_leds_on();
         while(1);
     }
+    wdt_init();
 
     while(1)
     {
+        nrfx_wdt_channel_feed(m_channel_id);
         app_sched_execute();
         power_manage();
     }

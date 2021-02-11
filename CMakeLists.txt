@@ -23,6 +23,8 @@ nrf5_target_link_libraries(iatwa PRIVATE
     nrf5_drv_clock
     nrf5_app_timer
     nrf5_app_scheduler
+    # watchdog
+    nrf5_nrfx_wdt
  )
 
  target_link_libraries(iatwa PRIVATE m)

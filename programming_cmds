@@ -1,5 +1,6 @@
 program /home/istep/nrf_sdk/nrf_sdk_17/components/softdevice/s132/hex/s132_nrf52_7.2.0_softdevice.hex verify
 program /home/istep/iatwa_DK/build/iatwa.hex verify
+program /home/istep/iatwa_DK/build/image_koji_radi_sa_tri_senzora.hex verify
 
 /home/istep/gcc-arm-none-eabi-9-2020-q2-update/bin/arm-none-eabi-objcopy -O ihex iatwa iatwa.hex
 
